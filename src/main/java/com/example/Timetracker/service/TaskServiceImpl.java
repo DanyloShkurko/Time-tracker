@@ -1,6 +1,6 @@
 package com.example.Timetracker.service;
 
-import com.example.Timetracker.entity.Task;
+import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.repository.TaskRepository;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +29,7 @@ public class TaskServiceImpl implements TaskService{
     }
 
     @Override
-    public List<Task> showAllTasks() {
+    public List<TaskResponse> showAllTasks() {
         return null;
     }
 

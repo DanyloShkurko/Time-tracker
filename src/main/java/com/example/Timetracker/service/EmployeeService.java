@@ -1,14 +1,15 @@
 package com.example.Timetracker.service;
 
-import com.example.Timetracker.entity.Employee;
-import com.example.Timetracker.entity.Task;
+import com.example.Timetracker.model.EmployeeRequest;
+import com.example.Timetracker.model.EmployeeResponse;
+import com.example.Timetracker.model.TaskResponse;
 
 import java.time.LocalDate;
 import java.util.List;
 
 public interface EmployeeService {
-    Employee createEmployee(Employee employee);
-    Employee editEmployeeInfo(Employee employee);
-    List<Task> showEmployeeEfforts(String employeeId, LocalDate n, LocalDate m);
+    String createEmployee(EmployeeRequest employee);
+    EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employee);
+    List<TaskResponse> showEmployeeEfforts(String employeeId, LocalDate n, LocalDate m);
     double showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId);
 }
