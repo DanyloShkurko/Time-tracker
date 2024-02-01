@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface EmployeeService {
     String createEmployee(EmployeeRequest employee);
-    EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employee);
+    EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employeeRequest);
     List<TaskResponse> showEmployeeEfforts(String employeeId, LocalDate n, LocalDate m);
     double showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId);
 }

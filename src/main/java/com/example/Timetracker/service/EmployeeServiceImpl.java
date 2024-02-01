@@ -5,8 +5,8 @@ import com.example.Timetracker.model.EmployeeRequest;
 import com.example.Timetracker.model.EmployeeResponse;
 import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.repository.EmployeeRepository;
+import com.example.Timetracker.utlil.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -38,9 +38,26 @@ public class EmployeeServiceImpl implements EmployeeService{
     }
 
     @Override
-    public EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employee) {
-        return null;
+    public EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employeeRequest) {
+        log.info("Saving employee changes...");
+
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
+        employee.setEmployee_name(employeeRequest.getEmployee_name());
+        employee.setEmail(employeeRequest.getEmail());
+
+        Employee updatedEmployee = employeeRepository.save(employee);
+
+        log.info("Changes are saved for the employee by id: {}", employeeId);
+
+        return EmployeeResponse.builder()
+                .id(updatedEmployee.getId())
+                .employee_name(updatedEmployee.getEmployee_name())
+                .email(updatedEmployee.getEmail())
+                .build();
     }
+
 
     @Override
     public List<TaskResponse> showEmployeeEfforts(String employeeId, LocalDate n, LocalDate m) {
