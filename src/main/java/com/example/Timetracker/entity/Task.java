@@ -20,9 +20,8 @@ public class Task {
     @Column(name = "id", unique = true, nullable = false)
     private String id;
 
-    @ManyToOne
-    @JoinColumn(name = "employee", nullable = false)
-    private Employee employee;
+    @Column(name = "employee")
+    private String employee;
 
     @Column(name = "name", length = 50, nullable = false)
     private String name;

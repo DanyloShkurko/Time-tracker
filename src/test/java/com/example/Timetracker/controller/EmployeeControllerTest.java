@@ -6,25 +6,26 @@ import com.example.Timetracker.service.EmployeeService;
 import com.example.Timetracker.utlil.EntityNotFoundException;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @WebMvcTest(EmployeeController.class)
 @AutoConfigureMockMvc
 class EmployeeControllerTest {
@@ -45,7 +46,7 @@ class EmployeeControllerTest {
     @Test
     void createEmployee_SuccessScenario() throws Exception {
         String employee = "{\"employee_name\": \"bob\", \"email\" : \"bob@gmail.com\"}";
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/employee")
+        mockMvc.perform(post("/api/v1/employee")
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(MockMvcResultMatchers.status().isOk());
@@ -55,41 +56,38 @@ class EmployeeControllerTest {
     void createEmployeeWithNullParameters_FailureScenario() throws Exception {
         String request = "{\"employee_name\": null, \"email\": null}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/employee")
+        mockMvc.perform(post("/api/v1/employee")
                         .content(request)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("employee_name", Is.is("Name is mandatory")))
-                .andExpect(MockMvcResultMatchers.jsonPath("email", Is.is("Email is mandatory")))
-                .andExpect(MockMvcResultMatchers.content()
-                        .contentType(MediaType.APPLICATION_JSON));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("employee_name", Is.is("Name is mandatory")))
+                .andExpect(jsonPath("email", Is.is("Email is mandatory")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
     void createEmployeeWithWrongLengthParameters_FailureScenario() throws Exception {
         String employee = "{\"employee_name\": \"" + "a".repeat(51) + "\", \"email\": \"" + "a".repeat(66) + "@gmail.com\" }";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/employee")
+        mockMvc.perform(post("/api/v1/employee")
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("employee_name", Is.is("The name must be less than 50 characters long!")))
-                .andExpect(MockMvcResultMatchers.jsonPath("email", Is.is("The email must be less than 75 characters long!")))
-                .andExpect(MockMvcResultMatchers.content()
-                        .contentType(MediaType.APPLICATION_JSON));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("employee_name", Is.is("The name must be less than 50 characters long!")))
+                .andExpect(jsonPath("email", Is.is("The email must be less than 75 characters long!")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
     void createEmployeeWithWrongEmailParameters_FailureScenario() throws Exception {
         String employee = "{\"employee_name\": \"bob\", \"email\" : \"bob@.cm\"}";
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/employee")
+        mockMvc.perform(post("/api/v1/employee")
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("email", Is.is("Email should be valid")))
-                .andExpect(MockMvcResultMatchers.content()
-                        .contentType(MediaType.APPLICATION_JSON));
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("email", Is.is("Email should be valid")))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     /* ========================================================================================= */
@@ -113,7 +111,7 @@ class EmployeeControllerTest {
 
         given(employeeService.editEmployeeInfo(eq(employeeId), any(EmployeeRequest.class))).willReturn(employeeResponse);
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/employee/" + employeeId)
+        mockMvc.perform(put("/api/v1/employee/" + employeeId)
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -130,7 +128,7 @@ class EmployeeControllerTest {
         willThrow(new EntityNotFoundException("Employee not found!"))
                 .given(employeeService).editEmployeeInfo(eq(employeeId), any(EmployeeRequest.class));
 
-        mockMvc.perform(MockMvcRequestBuilders.put("/api/v1/employee/" + employeeId)
+        mockMvc.perform(put("/api/v1/employee/" + employeeId)
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
