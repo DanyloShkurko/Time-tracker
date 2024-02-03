@@ -71,13 +71,73 @@ class TaskServiceImplTest {
     /* ========================================================================================= */
     /* ========================================================================================= */
 
-    @Test
-    void startTaskCountdown() {
-    }
+    /* ======================================================================================== */
+    /* ============================== START TASK COUNTDOWN TESTS ============================== */
+    /* ======================================================================================== */
 
     @Test
-    void stopTaskCountdown() {
+    void startTaskCountdown_SuccessScenario() {
+        String employeeId = employeeRepository.save(Employee.builder()
+                .id(UUID.randomUUID().toString())
+                .employee_name("name")
+                .email("email@example.com")
+                .build()).getId();
+
+        String taskId = taskRepository.save(Task.builder()
+                        .id(UUID.randomUUID().toString())
+                        .employee(employeeId)
+                        .name("task")
+                .build()).getId();
+
+        taskService.startTaskCountdown(taskId);
+
+        Optional<Task> task = taskRepository.findById(taskId);
+
+        assertTrue(task.isPresent());
+        assertNotNull(task.get().getStartTime());
     }
+    @Test
+    void startTaskCountdown_FailureScenario() {
+        assertThrows(EntityNotFoundException.class, () -> taskService.startTaskCountdown("-1"));
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ==================================== END TASK TESTS ==================================== */
+    /* ======================================================================================== */
+
+    @Test
+    void stopTaskCountdown_SuccessScenario() {
+        String employeeId = employeeRepository.save(Employee.builder()
+                .id(UUID.randomUUID().toString())
+                .employee_name("name")
+                .email("email@example.com")
+                .build()).getId();
+
+        String taskId = taskRepository.save(Task.builder()
+                .id(UUID.randomUUID().toString())
+                .employee(employeeId)
+                .name("task")
+                .build()).getId();
+
+        taskService.stopTaskCountdown(taskId);
+
+        Optional<Task> task = taskRepository.findById(taskId);
+
+        assertTrue(task.isPresent());
+        assertNotNull(task.get().getEndTime());
+    }
+    @Test
+    void stopTaskCountdown_FailureScenario() {
+        assertThrows(EntityNotFoundException.class, () -> taskService.stopTaskCountdown("-1"));
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
 
     @Test
     void showAllTasks() {

@@ -7,8 +7,8 @@ import java.util.List;
 
 public interface TaskService {
     TaskResponse createTask(TaskRequest taskRequest);
-    void startTaskCountdown(String taskId, String employeeId);
-    void stopTaskCountdown(String taskId, String employeeId);
+    void startTaskCountdown(String taskId);
+    void stopTaskCountdown(String taskId);
     List<TaskResponse> showAllTasks();
     void clearEmployeeTrackingData(String employeeId);
 }

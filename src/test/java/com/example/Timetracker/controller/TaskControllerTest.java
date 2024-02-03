@@ -3,6 +3,7 @@ package com.example.Timetracker.controller;
 import com.example.Timetracker.model.TaskRequest;
 import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.service.TaskService;
+import com.example.Timetracker.utlil.EntityNotFoundException;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -79,4 +81,64 @@ class TaskControllerTest {
     /* ========================================================================================= */
     /* ========================================================================================= */
     /* ========================================================================================= */
+
+    /* ======================================================================================== */
+    /* ============================== START TASK COUNTDOWN TESTS ============================== */
+    /* ======================================================================================== */
+
+    @Test
+    void startTaskCountdown_FailureScenario() throws Exception {
+        String id = "1";
+
+        doThrow(EntityNotFoundException.class).when(taskService).startTaskCountdown(any(String.class));
+
+        mockMvc.perform(post(URL + "/" + id + "/start"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void startTaskCountdown_SuccessScenario() throws Exception {
+        String id = "1";
+
+        doNothing().when(taskService).startTaskCountdown(any(String.class));
+
+        mockMvc.perform(post(URL + "/" + id + "/start"))
+                .andExpect(status().isOk());
+
+        verify(taskService).startTaskCountdown(id);
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ==================================== END TASK TESTS ==================================== */
+    /* ======================================================================================== */
+
+    @Test
+    void stopTaskCountdown_SuccessScenario() throws Exception {
+        String id = "1";
+
+        doNothing().when(taskService).stopTaskCountdown(any(String.class));
+
+        mockMvc.perform(post(URL + "/" + id + "/stop"))
+                .andExpect(status().isOk());
+
+        verify(taskService).stopTaskCountdown(id);
+    }
+
+    @Test
+    void stopTaskCountdown_FailureScenario() throws Exception {
+        String id = "1";
+
+        doThrow(EntityNotFoundException.class).when(taskService).stopTaskCountdown(any(String.class));
+
+        mockMvc.perform(post(URL + "/" + id + "/stop"))
+                .andExpect(status().isBadRequest());
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
 }

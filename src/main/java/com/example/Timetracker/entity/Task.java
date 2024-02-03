@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.time.Instant;
 
 @Entity
 @Table(name = "Task")
@@ -26,9 +26,9 @@ public class Task {
     @Column(name = "name", length = 50, nullable = false)
     private String name;
 
-    @Column(name = "start_time")
-    private LocalDate start_time;
+    @Column(name = "startTime")
+    private Instant startTime;
 
-    @Column(name = "end_time")
-    private LocalDate end_time;
+    @Column(name = "endTime")
+    private Instant endTime;
 }

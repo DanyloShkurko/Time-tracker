@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.format.DateTimeParseException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,5 +28,11 @@ public class ApplicationExceptionHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public String handleNotFoundException(EntityNotFoundException ex){
         return ex.getMessage();
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(DateTimeParseException.class)
+    public String handleWrongDateFormat(){
+        return "Dates entered must be in the format yyyy-MM-dd";
     }
 }

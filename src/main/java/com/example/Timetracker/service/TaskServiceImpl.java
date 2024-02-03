@@ -10,6 +10,7 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -50,12 +51,25 @@ public class TaskServiceImpl implements TaskService{
     }
 
     @Override
-    public void startTaskCountdown(String taskId, String employeeId) {
+    public void startTaskCountdown(String taskId) {
+        log.info("Is timed for the task with id: {}", taskId);
 
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new EntityNotFoundException("There is no task with id: " + taskId));
+        task.setStartTime(Instant.now());
+        taskRepository.save(task);
+
+        log.info("The start time of the task is saved!");
     }
 
     @Override
-    public void stopTaskCountdown(String taskId, String employeeId) {
+    public void stopTaskCountdown(String taskId) {
+        log.info("Saving the task end time...");
+
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new EntityNotFoundException("There is no task with id: " + taskId));
+        task.setEndTime(Instant.now());
+        taskRepository.save(task);
+
+        log.info("The end time of the task is saved!");
 
     }
 

@@ -1,15 +1,19 @@
 package com.example.Timetracker.service;
 
 import com.example.Timetracker.entity.Employee;
+import com.example.Timetracker.entity.Task;
 import com.example.Timetracker.model.EmployeeRequest;
 import com.example.Timetracker.model.EmployeeResponse;
 import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.repository.EmployeeRepository;
+import com.example.Timetracker.repository.TaskRepository;
 import com.example.Timetracker.utlil.EntityNotFoundException;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,9 +21,12 @@ import java.util.UUID;
 @Log4j2
 public class EmployeeServiceImpl implements EmployeeService{
     private final EmployeeRepository employeeRepository;
+    private final TaskRepository taskRepository;
 
-    public EmployeeServiceImpl(EmployeeRepository employeeRepository) {
+    @Autowired
+    public EmployeeServiceImpl(EmployeeRepository employeeRepository, TaskRepository taskRepository) {
         this.employeeRepository = employeeRepository;
+        this.taskRepository = taskRepository;
     }
 
     @Override
@@ -60,9 +67,24 @@ public class EmployeeServiceImpl implements EmployeeService{
 
 
     @Override
-    public List<TaskResponse> showEmployeeEfforts(String employeeId, LocalDate n, LocalDate m) {
-        return null;
+    public List<TaskResponse> showEmployeeEfforts(String employeeId, Instant start, Instant end) {
+        List<Task> employeeEfforts = taskRepository.findTasksByEmployeeAndEndTimeBetween(employeeId, start, end);
+        return employeeEfforts.stream()
+                .map(e -> TaskResponse.builder()
+                        .id(e.getId())
+                        .employee(e.getEmployee())
+                        .name(e.getName())
+                        .start_time(e.getStartTime())
+                        .end_time(e.getEndTime())
+                        .build())
+                .sorted((task1, task2) -> {
+                    Duration duration1 = Duration.between(task1.getStart_time(), task1.getEnd_time());
+                    Duration duration2 = Duration.between(task2.getStart_time(), task2.getEnd_time());
+                    return duration2.compareTo(duration1);
+                })
+                .toList();
     }
+
 
     @Override
     public double showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId) {
