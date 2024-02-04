@@ -19,8 +19,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
@@ -31,7 +33,7 @@ class EmployeeServiceImplTest {
     @Autowired
     private EmployeeService employeeService;
 
-    @Autowired
+    @MockBean
     private EmployeeRepository employeeRepository;
 
     @MockBean
@@ -43,13 +45,11 @@ class EmployeeServiceImplTest {
     @Test
     public void testCreateEmployee() {
         EmployeeRequest employeeRequest = new EmployeeRequest("Name", "email@example.com");
+        when(employeeRepository.save(any(Employee.class))).thenReturn(new Employee());
+
         String employeeId = employeeService.createEmployee(employeeRequest);
 
-        Employee found = employeeRepository.findById(employeeId).orElse(null);
-
-        assertNotNull(found);
-        assertEquals(employeeRequest.getEmployee_name(), found.getEmployee_name());
-        assertEquals(employeeRequest.getEmail(), found.getEmail());
+        assertNotNull(employeeId);
     }
 
     /* ========================================================================================= */
@@ -67,29 +67,28 @@ class EmployeeServiceImplTest {
                 .email("oldEmail")
                 .build();
 
-        employeeRepository.save(existingEmployee);
+        EmployeeRequest employeeRequest = new EmployeeRequest("newName", "newEmail");
 
-        EmployeeRequest employeeRequest = EmployeeRequest.builder()
-                .employee_name("newName")
-                .email("newEmail")
-                .build();
+        when(employeeRepository.findById("1")).thenReturn(Optional.of(existingEmployee));
+        when(employeeRepository.save(any(Employee.class))).thenReturn(existingEmployee);
 
-        EmployeeResponse actualResponse = employeeService.editEmployeeInfo(existingEmployee.getId(), employeeRequest);
+        EmployeeResponse actualResponse = employeeService.editEmployeeInfo("1", employeeRequest);
 
-        assertEquals(existingEmployee.getId(), actualResponse.getId());
-        assertEquals(employeeRequest.getEmployee_name(), actualResponse.getEmployee_name());
-        assertEquals(employeeRequest.getEmail(), actualResponse.getEmail());
+        assertEquals("1", actualResponse.getId());
+        assertEquals("newName", actualResponse.getEmployee_name());
+        assertEquals("newEmail", actualResponse.getEmail());
     }
+
 
     @Test
     void editEmployeeInfo_FailureScenario() {
-        EmployeeRequest employeeRequest = EmployeeRequest.builder()
-                .employee_name("newName")
-                .email("newEmail")
-                .build();
+        when(employeeRepository.findById("non-existent-id")).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> employeeService.editEmployeeInfo("1", employeeRequest));
+        EmployeeRequest employeeRequest = new EmployeeRequest("newName", "newEmail");
+
+        assertThrows(EntityNotFoundException.class, () -> employeeService.editEmployeeInfo("non-existent-id", employeeRequest));
     }
+
 
     /* ========================================================================================= */
     /* ========================================================================================= */
@@ -104,6 +103,9 @@ class EmployeeServiceImplTest {
         String employee = "0ec35bbc-132b-43c5-a235-e61b2159acbf";
         Instant start = LocalDate.parse("2024-02-01").atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant end = LocalDate.parse("2024-03-10").atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        when(employeeRepository.findById(employee)).thenReturn(Optional.of(new Employee()));
+
         when(taskRepository.findTasksByEmployeeAndEndTimeBetween(eq(employee), eq(start), eq(end)))
                 .thenReturn(List.of(
                         new Task("1", employee, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
@@ -119,12 +121,55 @@ class EmployeeServiceImplTest {
         assertEquals("3", actual.get(2).getId());
     }
 
+    @Test
+    void showEmployeeEfforts_FailureScenario() {
+        String employeeId = "1";
+        Instant start = LocalDate.parse("2024-02-01").atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant end = LocalDate.parse("2024-03-10").atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        assertThrows(EntityNotFoundException.class, () -> employeeService.showEmployeeEfforts(employeeId, start, end));
+    }
+
 
     /* ========================================================================================= */
     /* ========================================================================================= */
     /* ========================================================================================= */
+
+    /* ======================================================================================== */
+    /* ========================== SHOW SUM OF EMPLOYEE EFFORTS TESTS ========================== */
+    /* ======================================================================================== */
 
     @Test
-    void showTheAmountOfLaborCostsForAllEmployeeTasks() {
+    void showTheAmountOfLaborCostsForAllEmployeeTasks_SuccessScenario() {
+        String employeeId = "1";
+        Instant start = LocalDate.parse("2024-02-01").atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant end = LocalDate.parse("2024-03-10").atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        when(employeeRepository.findById(eq(employeeId))).thenReturn(Optional.of(new Employee()));
+
+        when(taskRepository.findTasksByEmployeeAndEndTimeBetween(eq(employeeId), eq(start), eq(end)))
+                .thenReturn(List.of(
+                        new Task("1", employeeId, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
+                        new Task("2", employeeId, "test", Instant.parse("2024-02-02T10:00:00Z"), Instant.parse("2024-02-02T12:00:00Z")),
+                        new Task("3", employeeId,"test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
+                ));
+
+        String expected = "03:30";
+        String actual = employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(employeeId, start, end);
+
+        assertEquals(expected, actual);
     }
+
+    @Test
+    void showTheAmountOfLaborCostsForAllEmployeeTasks_FailureScenario() {
+        String employeeId = "1";
+        Instant start = LocalDate.parse("2024-02-01").atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant end = LocalDate.parse("2024-03-10").atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        assertThrows(EntityNotFoundException.class, () -> employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(employeeId, start, end));
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
 }

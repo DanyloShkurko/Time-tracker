@@ -38,14 +38,27 @@ public class EmployeeController {
     public ResponseEntity<List<TaskResponse>> showEmployeeEfforts(@PathVariable String employeeId,
                                                                   @RequestParam(name = "start") String start,
                                                                   @RequestParam(name = "end") String end) {
-        Instant startInstant;
-        Instant endInstant;
-        try {
-            startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
-            endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
-        }catch (DateTimeParseException exception){
-            throw new RuntimeException(exception);
-        }
+        Instant startInstant = convertStringToInstant(start);
+        Instant endInstant = convertStringToInstant(end);
+
         return new ResponseEntity<>(employeeService.showEmployeeEfforts(employeeId, startInstant, endInstant), HttpStatus.OK);
+    }
+
+    @GetMapping("/{employeeId}/total-time")
+    public ResponseEntity<String> showTheAmountOfLaborCostsForAllEmployeeTasks(@PathVariable String employeeId,
+                                                                  @RequestParam(name = "start") String start,
+                                                                  @RequestParam(name = "end") String end) {
+        Instant startInstant = convertStringToInstant(start);
+        Instant endInstant = convertStringToInstant(end);
+
+        return new ResponseEntity<>(employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(employeeId, startInstant, endInstant), HttpStatus.OK);
+    }
+
+    public Instant convertStringToInstant(String date){
+        try {
+            return LocalDate.parse(date).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        } catch (DateTimeParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

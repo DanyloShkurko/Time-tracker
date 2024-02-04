@@ -46,6 +46,8 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employeeRequest) {
+        employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
         log.info("Saving employee changes...");
 
         Employee employee = employeeRepository.findById(employeeId)
@@ -68,6 +70,8 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public List<TaskResponse> showEmployeeEfforts(String employeeId, Instant start, Instant end) {
+        employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
         List<Task> employeeEfforts = taskRepository.findTasksByEmployeeAndEndTimeBetween(employeeId, start, end);
         return employeeEfforts.stream()
                 .map(e -> TaskResponse.builder()
@@ -87,7 +91,22 @@ public class EmployeeServiceImpl implements EmployeeService{
 
 
     @Override
-    public double showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId) {
-        return 0;
+    public String showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId, Instant start, Instant end) {
+        employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
+        List<Task> employeeEfforts = taskRepository.findTasksByEmployeeAndEndTimeBetween(employeeId, start, end);
+
+        Duration totalDuration = Duration.ZERO;
+        Duration duration;
+
+        for (Task task : employeeEfforts){
+            duration = Duration.between(task.getStartTime(), task.getEndTime());
+            totalDuration = totalDuration.plus(duration);
+        }
+
+        long hours = totalDuration.toHours();
+        long minutes = totalDuration.toMinutes() % 60;
+
+        return String.format("%02d:%02d", hours, minutes);
     }
 }

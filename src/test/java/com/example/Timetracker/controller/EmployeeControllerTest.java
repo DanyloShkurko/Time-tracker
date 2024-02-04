@@ -20,9 +20,9 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.UUID;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -117,7 +117,7 @@ class EmployeeControllerTest {
 
         given(employeeService.editEmployeeInfo(eq(employeeId), any(EmployeeRequest.class))).willReturn(employeeResponse);
 
-        mockMvc.perform(put(URL +"/"+ employeeId)
+        mockMvc.perform(put(URL + "/" + employeeId)
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -134,7 +134,7 @@ class EmployeeControllerTest {
         willThrow(new EntityNotFoundException("Employee not found!"))
                 .given(employeeService).editEmployeeInfo(eq(employeeId), any(EmployeeRequest.class));
 
-        mockMvc.perform(put(URL +"/"+ employeeId)
+        mockMvc.perform(put(URL + "/" + employeeId)
                         .content(employee)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
@@ -159,7 +159,7 @@ class EmployeeControllerTest {
         Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        String request = "/"+employeeId+"/tasks?start="+start+"&end="+end;
+        String request = "/" + employeeId + "/tasks?start=" + start + "&end=" + end;
 
         given(employeeService.showEmployeeEfforts(eq(employeeId), eq(startInstant), eq(endInstant))).willReturn(List.of());
 
@@ -168,14 +168,14 @@ class EmployeeControllerTest {
                 .andExpect(status().isOk());
     }
 
-    @Test()
-    void showEmployeeEffortsTest_FailureScenario() throws Exception {
+    @Test
+    void showEmployeeEffortsTest_FailureScenario_WrongFormatData() throws Exception {
         String employeeId = "1";
 
         String start = "2024-02-02T11:18:04.476145Z";
         String end = "2024-03-03T11:18:04.476145Z";
 
-        String request = "/"+employeeId+"/tasks?start="+start+"1&end="+end;
+        String request = "/" + employeeId + "/tasks?start=" + start + "1&end=" + end;
 
         mockMvc.perform(get(URL + request)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -183,8 +183,95 @@ class EmployeeControllerTest {
                 .andExpect(content().string("Dates entered must be in the format yyyy-MM-dd"));
     }
 
+    @Test
+    void showEmployeeEffortsTest_FailureScenario_WrongEmployeeId() throws Exception {
+        String employeeId = UUID.randomUUID().toString();
+
+        String start = "2024-02-01";
+        String end = "2024-02-01";
+
+
+        Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        String request = "/" + employeeId + "/tasks?start=" + start + "&end=" + end;
+
+        given(employeeService.showEmployeeEfforts(anyString(), eq(startInstant), eq(endInstant))).willThrow(new EntityNotFoundException("Employee not found!"));
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Employee not found!"));
+    }
+
     /* ========================================================================================= */
     /* ========================================================================================= */
     /* ========================================================================================= */
+
+    /* ======================================================================================== */
+    /* ========================== SHOW SUM OF EMPLOYEE EFFORTS TESTS ========================== */
+    /* ======================================================================================== */
+
+    @Test
+    void showSumOfEmployeeEffortsTest_SuccessScenario() throws Exception {
+        String employeeId = "1";
+
+        String start = "2024-02-01";
+        String end = "2024-02-01";
+
+        Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        String request = "/" + employeeId + "/total-time?start=" + start + "&end=" + end;
+
+        String expected = "3:21";
+
+        given(employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(eq(employeeId), eq(startInstant), eq(endInstant))).willReturn(expected);
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().string(expected));
+    }
+
+    @Test
+    void showSumOfEmployeeEffortsTest_FailureScenario_WrongDataFormat() throws Exception {
+        String employeeId = "1";
+
+        String start = "2024-02-02T11:18:04.476145Z";
+        String end = "2024-03-03T11:18:04.476145Z";
+
+        String request = "/" + employeeId + "/total-time?start=" + start + "&end=" + end;
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Dates entered must be in the format yyyy-MM-dd"));
+    }
+    @Test
+    void showSumOfEmployeeEffortsTest_FailureScenario_WrongEmployeeId() throws Exception {
+        String employeeId = UUID.randomUUID().toString();
+
+        String start = "2024-02-01";
+        String end = "2024-02-01";
+
+
+        Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        String request = "/" + employeeId + "/total-time?start=" + start + "&end=" + end;
+
+        given(employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(anyString(), eq(startInstant), eq(endInstant))).willThrow(new EntityNotFoundException("Employee not found!"));
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Employee not found!"));
+    }
+
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
 
 }
