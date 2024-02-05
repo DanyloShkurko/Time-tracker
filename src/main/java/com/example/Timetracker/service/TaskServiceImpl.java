@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Service
 @Log4j2
-public class TaskServiceImpl implements TaskService{
+public class TaskServiceImpl implements TaskService {
     private final TaskRepository taskRepository;
     private final EmployeeRepository employeeRepository;
 
@@ -74,8 +74,25 @@ public class TaskServiceImpl implements TaskService{
     }
 
     @Override
-    public List<TaskResponse> showAllTasks() {
-        return null;
+    public List<TaskResponse> showAllWorkIntervalsByEmployeeId(String id, Instant start, Instant end) {
+        log.info("Looking for an employee based on his id...");
+        employeeRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
+        log.info("Looking for all time slots occupied by work...");
+        List<Task> tasks = taskRepository.findTasksByEmployeeAndEndTimeBetween(id, start, end);
+
+        log.info("There they are!");
+        log.info(tasks);
+
+        return tasks.stream()
+                .map(e -> TaskResponse.builder()
+                        .id(e.getId())
+                        .name(e.getName())
+                        .employee(e.getEmployee())
+                        .start_time(e.getStartTime())
+                        .end_time(e.getEndTime())
+                        .build())
+                .toList();
     }
 
     @Override

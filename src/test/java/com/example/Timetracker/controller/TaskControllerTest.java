@@ -16,12 +16,18 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.List;
+import java.util.UUID;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
 @WebMvcTest(TaskController.class)
@@ -136,6 +142,84 @@ class TaskControllerTest {
 
         mockMvc.perform(post(URL + "/" + id + "/stop"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ===================== SHOW ALL WORK INTERVALS BY EMPLOYEE ID TESTS ===================== */
+    /* ======================================================================================== */
+
+    @Test
+    void showAllWorkIntervalsByEmployeeId_SuccessScenario() throws Exception {
+        String employee = UUID.randomUUID().toString();
+
+        String start = "2024-02-01";
+        String end = "2024-03-10";
+
+        Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        String request = "/" + employee + "?start=" + start + "&end=" + end;
+
+        List<TaskResponse> taskResponses = List.of(
+                new TaskResponse("1", employee, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
+                new TaskResponse("2", employee, "test", Instant.parse("2024-02-02T10:00:00Z"), Instant.parse("2024-02-02T12:00:00Z")),
+                new TaskResponse("3", employee, "test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
+        );
+
+        String expected = "[\n" +
+                "    {\n" +
+                "        \"id\": \"1\",\n" +
+                "        \"employee\": \"" + employee + "\",\n" +
+                "        \"name\": \"test\",\n" +
+                "        \"start_time\": \"2024-02-01T10:00:00Z\",\n" +
+                "        \"end_time\": \"2024-02-01T11:00:00Z\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "        \"id\": \"2\",\n" +
+                "        \"employee\": \"" + employee + "\",\n" +
+                "        \"name\": \"test\",\n" +
+                "        \"start_time\": \"2024-02-02T10:00:00Z\",\n" +
+                "        \"end_time\": \"2024-02-02T12:00:00Z\"\n" +
+                "    },\n" +
+                "    {\n" +
+                "        \"id\": \"3\",\n" +
+                "        \"employee\": \"" + employee + "\",\n" +
+                "        \"name\": \"test\",\n" +
+                "        \"start_time\": \"2024-02-03T10:00:00Z\",\n" +
+                "        \"end_time\": \"2024-02-03T10:30:00Z\"\n" +
+                "    }\n" +
+                "]\n";
+
+        given(taskService.showAllWorkIntervalsByEmployeeId(eq(employee), eq(startInstant), eq(endInstant))).willReturn(taskResponses);
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expected));
+    }
+
+    @Test
+    void showAllWorkIntervalsByEmployeeId_FailureScenario() throws Exception {
+        String employee = "-1";
+
+        String start = "2024-02-01";
+        String end = "2024-03-10";
+
+        Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
+        Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
+
+        String request = "/" + employee + "?start=" + start + "&end=" + end;
+
+        given(taskService.showAllWorkIntervalsByEmployeeId(eq(employee), eq(startInstant), eq(endInstant))).willThrow((new EntityNotFoundException("Employee not found!")));
+
+        mockMvc.perform(get(URL + request)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Employee not found!"));
     }
 
     /* ======================================================================================== */
