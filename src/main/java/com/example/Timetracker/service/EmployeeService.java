@@ -12,4 +12,5 @@ public interface EmployeeService {
     EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employeeRequest);
     List<TaskResponse> showEmployeeEfforts(String employeeId, Instant start, Instant end);
     String showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId, Instant start, Instant end);
+    void removeEmployee(String employeeId);
 }

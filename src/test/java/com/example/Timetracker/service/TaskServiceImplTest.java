@@ -198,6 +198,9 @@ class TaskServiceImplTest {
 
     @Test
     void clearEmployeeTrackingData_FailureScenario() {
-
+        String employeeId = UUID.randomUUID().toString();
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> taskService.clearEmployeeTrackingData(employeeId));
     }
+
 }

@@ -22,9 +22,11 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -269,9 +271,40 @@ class EmployeeControllerTest {
                 .andExpect(content().string("Employee not found!"));
     }
 
-
     /* ======================================================================================== */
     /* ======================================================================================== */
     /* ======================================================================================== */
 
+    /* ======================================================================================== */
+    /* ============================ REMOVE ALL EMPLOYEE DATA TESTS ============================ */
+    /* ======================================================================================== */
+
+    @Test
+    void removeEmployee_SuccessScenario() throws Exception {
+        String employeeId = UUID.randomUUID().toString();
+        String request = URL + "/" + employeeId;
+
+        doNothing().when(employeeService).removeEmployee(employeeId);
+
+        mockMvc.perform(delete(request))
+                .andExpect(status().isOk());
+
+        verify(employeeService).removeEmployee(employeeId);
+    }
+    @Test
+    void removeEmployee_FailureScenario() throws Exception {
+        String employeeId = UUID.randomUUID().toString();
+        String request = URL + "/" + employeeId;
+
+        doThrow(new EntityNotFoundException("Entity not found!")).when(employeeService).removeEmployee(employeeId);
+
+        mockMvc.perform(delete(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Entity not found!"))
+                .andExpect(result -> assertTrue(result.getResolvedException() instanceof EntityNotFoundException));
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
 }

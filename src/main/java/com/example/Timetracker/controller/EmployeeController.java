@@ -54,6 +54,12 @@ public class EmployeeController {
         return new ResponseEntity<>(employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(employeeId, startInstant, endInstant), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{employeeId}")
+    public ResponseEntity<Void> removeEmployee(@PathVariable String employeeId){
+        employeeService.removeEmployee(employeeId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public Instant convertStringToInstant(String date){
         try {
             return LocalDate.parse(date).atStartOfDay(ZoneId.systemDefault()).toInstant();

@@ -8,6 +8,7 @@ import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.repository.EmployeeRepository;
 import com.example.Timetracker.repository.TaskRepository;
 import com.example.Timetracker.utlil.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,6 +47,7 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public EmployeeResponse editEmployeeInfo(String employeeId, EmployeeRequest employeeRequest) {
+        log.info("Looking for an employee based on his id...");
         employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
 
         log.info("Saving employee changes...");
@@ -70,10 +72,12 @@ public class EmployeeServiceImpl implements EmployeeService{
 
     @Override
     public List<TaskResponse> showEmployeeEfforts(String employeeId, Instant start, Instant end) {
+        log.info("Retrieving employee efforts for employeeId: {}, from: {}, to: {}", employeeId, start, end);
+        log.info("Looking for an employee based on his id...");
         employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
 
         List<Task> employeeEfforts = taskRepository.findTasksByEmployeeAndEndTimeBetween(employeeId, start, end);
-        return employeeEfforts.stream()
+        List<TaskResponse> responses = employeeEfforts.stream()
                 .map(e -> TaskResponse.builder()
                         .id(e.getId())
                         .employee(e.getEmployee())
@@ -87,26 +91,46 @@ public class EmployeeServiceImpl implements EmployeeService{
                     return duration2.compareTo(duration1);
                 })
                 .toList();
+
+        log.info("Found {} efforts for employeeId: {}", responses.size(), employeeId);
+
+        return responses;
     }
 
 
     @Override
     public String showTheAmountOfLaborCostsForAllEmployeeTasks(String employeeId, Instant start, Instant end) {
+        log.info("Calculating the amount of labor costs for all tasks of employeeId: {}, from: {}, to: {}", employeeId, start, end);
+        log.info("Looking for an employee based on his id...");
         employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
 
         List<Task> employeeEfforts = taskRepository.findTasksByEmployeeAndEndTimeBetween(employeeId, start, end);
 
         Duration totalDuration = Duration.ZERO;
-        Duration duration;
-
-        for (Task task : employeeEfforts){
-            duration = Duration.between(task.getStartTime(), task.getEndTime());
+        for (Task task : employeeEfforts) {
+            Duration duration = Duration.between(task.getStartTime(), task.getEndTime());
             totalDuration = totalDuration.plus(duration);
         }
 
         long hours = totalDuration.toHours();
         long minutes = totalDuration.toMinutes() % 60;
 
-        return String.format("%02d:%02d", hours, minutes);
+        String result = String.format("%02d:%02d", hours, minutes);
+        log.info("Total labor costs for employeeId: {} is {}", employeeId, result);
+        return result;
+    }
+
+
+    @Override
+    @Transactional
+    public void removeEmployee(String employeeId) {
+        log.info("Looking for an employee based on his id...");
+        employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
+
+        log.info("Removing all employee's tasks...");
+        taskRepository.deleteTasksByEmployee(employeeId);
+
+        log.info("Removing employee...");
+        employeeRepository.deleteById(employeeId);
     }
 }

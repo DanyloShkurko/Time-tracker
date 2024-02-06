@@ -20,11 +20,12 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -110,7 +111,7 @@ class EmployeeServiceImplTest {
                 .thenReturn(List.of(
                         new Task("1", employee, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
                         new Task("2", employee, "test", Instant.parse("2024-02-02T10:00:00Z"), Instant.parse("2024-02-02T12:00:00Z")),
-                        new Task("3", employee,"test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
+                        new Task("3", employee, "test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
                 ));
 
 
@@ -151,7 +152,7 @@ class EmployeeServiceImplTest {
                 .thenReturn(List.of(
                         new Task("1", employeeId, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
                         new Task("2", employeeId, "test", Instant.parse("2024-02-02T10:00:00Z"), Instant.parse("2024-02-02T12:00:00Z")),
-                        new Task("3", employeeId,"test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
+                        new Task("3", employeeId, "test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
                 ));
 
         String expected = "03:30";
@@ -169,6 +170,28 @@ class EmployeeServiceImplTest {
         assertThrows(EntityNotFoundException.class, () -> employeeService.showTheAmountOfLaborCostsForAllEmployeeTasks(employeeId, start, end));
     }
 
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ============================ REMOVE ALL EMPLOYEE DATA TESTS ============================ */
+    /* ======================================================================================== */
+    @Test
+    void removeEmployee_SuccessScenario() {
+        String employeeId = UUID.randomUUID().toString();
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(new Employee()));
+        employeeService.removeEmployee(employeeId);
+        verify(employeeRepository).deleteById(employeeId);
+        assertDoesNotThrow(() -> employeeService.removeEmployee(employeeId));
+    }
+
+    @Test
+    void removeEmployee_FailureScenario() {
+        String employeeId = UUID.randomUUID().toString();
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.empty());
+        assertThrows(EntityNotFoundException.class, () -> employeeService.removeEmployee(employeeId));
+    }
     /* ======================================================================================== */
     /* ======================================================================================== */
     /* ======================================================================================== */
