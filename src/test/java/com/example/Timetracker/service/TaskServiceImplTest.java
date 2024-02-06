@@ -24,6 +24,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(SpringExtension.class)
@@ -141,7 +142,7 @@ class TaskServiceImplTest {
         Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        List<Task> tasks= List.of(
+        List<Task> tasks = List.of(
                 new Task("1", employee, "test", Instant.parse("2024-02-01T10:00:00Z"), Instant.parse("2024-02-01T11:00:00Z")),
                 new Task("2", employee, "test", Instant.parse("2024-02-02T10:00:00Z"), Instant.parse("2024-02-02T12:00:00Z")),
                 new Task("3", employee, "test", Instant.parse("2024-02-03T10:00:00Z"), Instant.parse("2024-02-03T10:30:00Z"))
@@ -152,7 +153,7 @@ class TaskServiceImplTest {
 
         List<TaskResponse> actual = taskService.showAllWorkIntervalsByEmployeeId(employee, startInstant, endInstant);
 
-        for (int i = 0; i < actual.size(); i++){
+        for (int i = 0; i < actual.size(); i++) {
             assertEquals(actual.get(i).getId(), tasks.get(i).getId());
             assertEquals(actual.get(i).getEmployee(), tasks.get(i).getEmployee());
             assertEquals(actual.get(i).getName(), tasks.get(i).getName());
@@ -171,13 +172,32 @@ class TaskServiceImplTest {
         Instant startInstant = LocalDate.parse(start).atStartOfDay(ZoneId.systemDefault()).toInstant();
         Instant endInstant = LocalDate.parse(end).atStartOfDay(ZoneId.systemDefault()).toInstant();
 
-        assertThrows(EntityNotFoundException.class,() -> taskService.showAllWorkIntervalsByEmployeeId(employee, startInstant, endInstant));
+        assertThrows(EntityNotFoundException.class, () -> taskService.showAllWorkIntervalsByEmployeeId(employee, startInstant, endInstant));
     }
 
     /* ======================================================================================== */
     /* ======================================================================================== */
     /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ========================== CLEAR EMPLOYEE TRACKING DATA TESTS ========================== */
+    /* ======================================================================================== */
+
     @Test
-    void clearEmployeeTrackingData() {
+    void clearEmployeeTrackingData_SuccessScenario() {
+        String employeeId = UUID.randomUUID().toString();
+
+        when(employeeRepository.findById(employeeId)).thenReturn(Optional.of(new Employee()));
+
+        taskService.clearEmployeeTrackingData(employeeId);
+
+        verify(taskRepository).deleteTasksByEmployee(employeeId);
+
+        assertDoesNotThrow(() -> taskService.clearEmployeeTrackingData(employeeId));
+    }
+
+    @Test
+    void clearEmployeeTrackingData_FailureScenario() {
+
     }
 }

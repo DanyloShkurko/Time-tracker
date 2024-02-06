@@ -6,6 +6,7 @@ import com.example.Timetracker.service.TaskService;
 import com.example.Timetracker.utlil.EntityNotFoundException;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,7 @@ import java.util.UUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(SpringExtension.class)
@@ -220,6 +220,40 @@ class TaskControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string("Employee not found!"));
+    }
+
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+    /* ======================================================================================== */
+
+    /* ======================================================================================== */
+    /* ========================== CLEAR EMPLOYEE TRACKING DATA TESTS ========================== */
+    /* ======================================================================================== */
+
+    @Test
+    void clearEmployeeTrackingData_SuccessScenario() throws Exception {
+        String id = UUID.randomUUID().toString();
+        String request = URL + "/"+id+"/task-entries";
+
+        doNothing().when(taskService).clearEmployeeTrackingData(id);
+
+        mockMvc.perform(delete(request))
+                .andExpect(status().isOk());
+
+        verify(taskService).clearEmployeeTrackingData(id);
+    }
+
+    @Test
+    void clearEmployeeTrackingData_FailureScenario() throws Exception {
+        String id = UUID.randomUUID().toString();
+        String request = URL + "/"+id+"/task-entries";
+
+        doThrow(new EntityNotFoundException("Employee not found!")).when(taskService).clearEmployeeTrackingData(id);
+
+        mockMvc.perform(delete(request))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Employee not found!"))
+                .andExpect(result -> Assertions.assertTrue(result.getResolvedException() instanceof EntityNotFoundException));
     }
 
     /* ======================================================================================== */

@@ -6,6 +6,7 @@ import com.example.Timetracker.model.TaskResponse;
 import com.example.Timetracker.repository.EmployeeRepository;
 import com.example.Timetracker.repository.TaskRepository;
 import com.example.Timetracker.utlil.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -96,7 +97,13 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    @Transactional
     public void clearEmployeeTrackingData(String employeeId) {
+        log.info("Looking for an employee based on his id...");
+        employeeRepository.findById(employeeId).orElseThrow(() -> new EntityNotFoundException("Employee not found!"));
 
+        log.info("Deleting all tasks by employee id...");
+        taskRepository.deleteTasksByEmployee(employeeId);
+        log.info("All tasks deleted!");
     }
 }

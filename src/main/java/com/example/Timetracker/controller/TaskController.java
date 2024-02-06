@@ -53,6 +53,12 @@ public class TaskController {
         return new ResponseEntity<>(taskService.showAllWorkIntervalsByEmployeeId(employeeId, startInstant, endInstant), HttpStatus.OK);
     }
 
+    @DeleteMapping("/{employeeId}/task-entries")
+    public ResponseEntity<Void> clearEmployeeTrackingData(@PathVariable String employeeId){
+        taskService.clearEmployeeTrackingData(employeeId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public Instant convertStringToInstant(String date){
         try {
             return LocalDate.parse(date).atStartOfDay(ZoneId.systemDefault()).toInstant();
